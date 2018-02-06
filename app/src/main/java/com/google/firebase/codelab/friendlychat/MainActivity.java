@@ -53,6 +53,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.appindexing.Action;
 import com.google.firebase.appindexing.FirebaseAppIndex;
 import com.google.firebase.appindexing.FirebaseUserActions;
@@ -110,6 +111,8 @@ public class MainActivity extends AppCompatActivity
     // Firebase instance variables
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
 
+    private FirebaseAnalytics mFirebaseAnalytics;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -120,6 +123,9 @@ public class MainActivity extends AppCompatActivity
 
         // Initialize Firebase Remote Config.
         mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
+
+        // Initialize Firebase Analytics
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
         // Define Firebase Remote Config Settings.
         FirebaseRemoteConfigSettings firebaseRemoteConfigSettings =
@@ -354,11 +360,21 @@ public class MainActivity extends AppCompatActivity
             }
         } else if (requestCode == REQUEST_INVITE) {
             if (resultCode == RESULT_OK) {
+                Bundle payload = new Bundle();
+                payload.putString(FirebaseAnalytics.Param.VALUE, "sent");
+                mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SHARE,
+                        payload);
                 // Check how many invitations were sent and log.
-                String[] ids = AppInviteInvitation.getInvitationIds(resultCode, data);
+                String[] ids = AppInviteInvitation.getInvitationIds(resultCode,
+                        data);
                 Timber.d("%s %s", "Invitations sent: ", ids.length);
             } else {
-                // Sending failed or it was canceled, show failure message to the user
+                Bundle payload = new Bundle();
+                payload.putString(FirebaseAnalytics.Param.VALUE, "not sent");
+                mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SHARE,
+                        payload);
+                // Sending failed or it was canceled, show failure message to
+                // the user
                 Timber.d("Failed to send invitation.");
             }
         }
