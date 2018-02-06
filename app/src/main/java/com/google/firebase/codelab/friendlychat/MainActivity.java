@@ -45,6 +45,7 @@ import com.bumptech.glide.Glide;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.firebase.ui.database.SnapshotParser;
+import com.google.android.gms.appinvite.AppInviteInvitation;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -120,22 +121,22 @@ public class MainActivity extends AppCompatActivity
         // Initialize Firebase Remote Config.
         mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
 
-// Define Firebase Remote Config Settings.
+        // Define Firebase Remote Config Settings.
         FirebaseRemoteConfigSettings firebaseRemoteConfigSettings =
                 new FirebaseRemoteConfigSettings.Builder()
                         .setDeveloperModeEnabled(true)
                         .build();
 
-// Define default config values. Defaults are used when fetched config values are not
-// available. Eg: if an error occurred fetching values from the server.
+        // Define default config values. Defaults are used when fetched config values are not
+        // available. Eg: if an error occurred fetching values from the server.
         Map<String, Object> defaultConfigMap = new HashMap<>();
         defaultConfigMap.put("friendly_msg_length", 10L);
 
-// Apply config settings and default values.
+        // Apply config settings and default values.
         mFirebaseRemoteConfig.setConfigSettings(firebaseRemoteConfigSettings);
         mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
 
-// Fetch remote config.
+        // Fetch remote config.
         fetchConfig();
 
         // Initialize Firebase Auth
@@ -351,6 +352,15 @@ public class MainActivity extends AppCompatActivity
                             });
                 }
             }
+        } else if (requestCode == REQUEST_INVITE) {
+            if (resultCode == RESULT_OK) {
+                // Check how many invitations were sent and log.
+                String[] ids = AppInviteInvitation.getInvitationIds(resultCode, data);
+                Timber.d("%s %s", "Invitations sent: ", ids.length);
+            } else {
+                // Sending failed or it was canceled, show failure message to the user
+                Timber.d("Failed to send invitation.");
+            }
         }
     }
 
@@ -407,11 +417,14 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.invite_menu:
+                sendInvitation(); // send app invite
+                return true;
             case R.id.fresh_config_menu:
-                fetchConfig();
+                fetchConfig(); // refresh remote config
                 return true;
             case R.id.sign_out_menu:
-                mFirebaseAuth.signOut();
+                mFirebaseAuth.signOut(); // user sign-out
                 mUsername = ANONYMOUS;
                 startActivity(new Intent(this, SignInActivity.class));
                 return true;
@@ -498,6 +511,17 @@ public class MainActivity extends AppCompatActivity
         mMessageEditText.setFilters(new InputFilter[]{new
                 InputFilter.LengthFilter(friendly_msg_length.intValue())});
         Timber.d("%s %s", "FML is: ", friendly_msg_length);
+    }
+
+    /**
+     * Starts the intent which provides the user the ability to send invitations..
+     */
+    private void sendInvitation() {
+        Intent intent = new AppInviteInvitation.IntentBuilder(getString(R.string.invitation_title))
+                .setMessage(getString(R.string.invitation_message))
+                .setCallToActionText(getString(R.string.invitation_cta))
+                .build();
+        startActivityForResult(intent, REQUEST_INVITE);
     }
 
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
