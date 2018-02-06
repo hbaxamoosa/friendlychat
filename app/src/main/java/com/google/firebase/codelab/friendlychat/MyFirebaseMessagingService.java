@@ -15,19 +15,18 @@
  */
 package com.google.firebase.codelab.friendlychat;
 
-import android.util.Log;
-
+import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
-public class MyFirebaseMessagingService {
+import timber.log.Timber;
 
-    private static final String TAG = "MyFMService";
+public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     public void onMessageReceived(RemoteMessage remoteMessage) {
         // Handle data payload of FCM messages.
-        Log.d(TAG, "FCM Message Id: " + remoteMessage.getMessageId());
-        Log.d(TAG, "FCM Notification Message: " + remoteMessage.getNotification());
-        Log.d(TAG, "FCM Data Message: " + remoteMessage.getData());
+        Timber.d("%s %s", "FCM Message Id: ", remoteMessage.getMessageId());
+        Timber.d("%s %s", "FCM Notification Message: ", remoteMessage.getNotification());
+        Timber.d("%s %s", "FCM Data Message: ", remoteMessage.getData());
     }
 
 }
